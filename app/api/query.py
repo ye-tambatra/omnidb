@@ -2,6 +2,8 @@ from fastapi import APIRouter, HTTPException
 from app.models import QueryRequest, QueryResponse
 from app.agent import create_omni_agent
 from app.database import get_configured_db_url
+from app.config_db import get_setting
+from app.utils import parse_agent_output
 import logging
 
 router = APIRouter()
@@ -13,15 +15,17 @@ async def execute_query(payload: QueryRequest):
     if not db_url:
         raise HTTPException(status_code=400, detail="Target database URL is not configured. Please configure it first via /config/db_url endpoint.")
         
+    permission_level = int(get_setting("current_permission_level") or 1)
+        
     try:
-        agent_executor = create_omni_agent(db_url=db_url, permission_level=payload.permission_level)
+        agent_executor = create_omni_agent(db_url=db_url, permission_level=permission_level)
         
         # Invoke agent
         response = agent_executor.invoke({"input": payload.query})
+        raw_output = response.get("output", "No output provided.")
         
         return QueryResponse(
-            explanation=response.get("output", "No output provided."),
-            raw_data=None  # Extended version could parse out agent steps to map raw tool responses here
+            explanation=parse_agent_output(raw_output)
         )
     except Exception as e:
         logger.error(f"Error executing query: {e}")
