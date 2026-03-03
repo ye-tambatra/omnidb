@@ -1,0 +1,23 @@
+# Environments
+.env
+.venv/
+env/
+venv/
+ENV/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Database
+*.sqlite
+*.db
+
+# IDEs
+.vscode/
+.idea/
+
+# OS
+.DS_Store
